@@ -3,15 +3,15 @@ import { v4 as uuidv4 } from "uuid";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
-    const { id_usuario, id_onibus, status, data, status_presenca } =
+    const { userId, onibusId, status, dataHoje, status_presenca } =
       dadosPresenca;
 
     console.log("dados do registrar ", dadosPresenca);
     let dataFormatada, dataObj;
 
     try {
-      dataObj = converterData(data); // Usa dataHoje para validação
-      dataFormatada = data; // Mantém o formato recebido (YYYY-MM-DD)
+      dataObj = converterData(dataHoje); // Usa dataHoje para validação
+      dataFormatada = dataHoje; // Mantém o formato recebido (YYYY-MM-DD)
     } catch (err) {
       throw new Error(err.message);
     }
@@ -19,9 +19,9 @@ const Presenca = {
     const dia_semana = obterDiaSemana(dataObj);
 
     // Verifica se já existe uma presença registrada
-    console.log("para verrficar: ", id_usuario, dataFormatada);
+    console.log("para verrficar: ", userId, dataFormatada);
     const presencaExistente = await this.verificaPresenca(
-      id_usuario,
+      userId,
       dataFormatada
     );
     if (presencaExistente) {
@@ -39,7 +39,6 @@ const Presenca = {
     }
 
     const id_presenca = uuidv4();
-
     const sql = `
       INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, STATUS, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -53,8 +52,8 @@ const Presenca = {
         dia_semana,
         status,
         status_presenca,
-        id_usuario,
-        id_onibus,
+        userId,
+        onibusId,
       ]);
       return result[0];
     } catch (err) {
