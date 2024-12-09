@@ -1,0 +1,60 @@
+
+//cadastro de usuario
+POST http://localhost:3000/registro/usuario
+Content-Type: application/json
+
+{
+  "nome": "gabiru",
+  "email": "gabiru@http.com",
+  "senha": "123456",
+  "confirmarSenha": "123456",
+  "num_celular": "27996571455"
+
+}
+
+###
+
+
+//cadastro de onibus
+POST http://localhost:3000/registro/onibus
+Content-Type: application/json
+
+{
+  "nome_onibus": "Onibus Dois",
+  "descricao": "este é o onibus Dois"
+
+}
+
+###
+//cadastro presença
+POST http://localhost:3000/registro/presenca
+Content-Type: application/json
+
+{
+  "id_usuario": "a661da4a-9df1-4a7e-8c65-3a4c3dcda8a0",
+  "id_onibus": "39469497-4efb-4f09-9c26-e6c0128879de",
+  "status": "vai_volta",
+  "status_presenca": true
+}
+//o uuid tem que ser passado corretamente se nao da pau
+
+###
+
+//deletar usuario
+DELETE http://localhost:3000/deletar/usuario
+Content-Type: application/json
+
+{
+  "id_usuario": "f7b3e66f-3a7b-4a16-b1fe-f3fec1a213b6"
+}
+
+//o uuid tem que ser passado corretamente se nao da pau
+
+###
+//deletar onibus
+DELETE http://localhost:3000/deletar/onibus
+Content-Type: application/json
+
+{
+  "id_onibus": "c26dd2ec-5f94-4885-9588-f797b09acad1"
+}
