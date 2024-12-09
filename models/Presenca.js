@@ -3,15 +3,16 @@ import { v4 as uuidv4 } from "uuid";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
-    const { userId, onibusId, status, dataHoje, status_presenca } =
+    const { id_usuario, id_onibus, status, data, status_presenca } =
       dadosPresenca;
 
     console.log("dados do registrar ", dadosPresenca);
     let dataFormatada, dataObj;
+    console.log("data de hoje: ", data);
 
     try {
-      dataObj = converterData(dataHoje); // Usa dataHoje para validação
-      dataFormatada = dataHoje; // Mantém o formato recebido (YYYY-MM-DD)
+      dataObj = converterData(data); // Usa dataHoje para validação
+      dataFormatada = data; // Mantém o formato recebido (YYYY-MM-DD)
     } catch (err) {
       throw new Error(err.message);
     }
@@ -19,9 +20,9 @@ const Presenca = {
     const dia_semana = obterDiaSemana(dataObj);
 
     // Verifica se já existe uma presença registrada
-    console.log("para verrficar: ", userId, dataFormatada);
+    console.log("para verrficar: ", id_usuario, dataFormatada);
     const presencaExistente = await this.verificaPresenca(
-      userId,
+      id_usuario,
       dataFormatada
     );
     if (presencaExistente) {
@@ -52,8 +53,8 @@ const Presenca = {
         dia_semana,
         status,
         status_presenca,
-        userId,
-        onibusId,
+        id_usuario,
+        id_onibus,
       ]);
       return result[0];
     } catch (err) {
@@ -166,19 +167,20 @@ function obterDiaSemana(data) {
   return diasDaSemana[diaSemanaIndice];
 }
 
-function converterData(data) {
-  if (!data || typeof data !== "string") {
+function converterData(dataHoje) {
+  console.log("do converter data:", dataHoje);
+  if (!dataHoje || typeof dataHoje !== "string") {
     throw new Error(
       "Data inválida. Esperado uma string no formato YYYY-MM-DD."
     );
   }
 
   const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(data)) {
+  if (!regex.test(dataHoje)) {
     throw new Error("Data no formato inválido. Use o formato YYYY-MM-DD.");
   }
 
-  const [ano, mes, dia] = data.split("-").map(Number);
+  const [ano, mes, dia] = dataHoje.split("-").map(Number);
   const dataObj = new Date(ano, mes - 1, dia);
 
   if (

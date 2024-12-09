@@ -305,7 +305,7 @@ router.get("/presenca/buscar", async (req, res) => {
 });
 
 app.get("/presenca/verificar/:onibusId/:userId", async (req, res) => {
-  const { onibusId, userId } = req.params;
+  const { id_onibus, id_usuario } = req.params;
 
   const hoje = new Date();
 
@@ -313,14 +313,17 @@ app.get("/presenca/verificar/:onibusId/:userId", async (req, res) => {
   const mes = String(hoje.getMonth() + 1).padStart(2, "0");
   const dia = String(hoje.getDate()).padStart(2, "0");
 
-  const dataHoje = `${ano}-${mes}-${dia}`;
+  const data = `${ano}-${mes}-${dia}`;
 
-  if (!onibusId || !userId) {
+  if (!id_onibus || !id_usuario) {
     return res.status(400).json({ msg: "onibusId e userId são obrigatórios!" });
   }
 
   try {
-    const presencaRetornada = await Presenca.validarPresenca(onibusId, userId);
+    const presencaRetornada = await Presenca.validarPresenca(
+      id_onibus,
+      id_usuario
+    );
 
     if (presencaRetornada) {
       return res
@@ -330,10 +333,10 @@ app.get("/presenca/verificar/:onibusId/:userId", async (req, res) => {
     if (!presencaRetornada) {
       try {
         const presencaRegistrada = await Presenca.registrarPresenca({
-          userId,
-          onibusId,
+          id_usuario,
+          id_onibus,
           status: "vai_volta",
-          dataHoje,
+          data,
           status_presenca: "PRESENTE",
         });
 
