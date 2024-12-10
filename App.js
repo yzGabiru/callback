@@ -304,7 +304,7 @@ router.get("/presenca/buscar", async (req, res) => {
   }
 });
 
-app.get("/presenca/verificar/:onibusId/:userId", async (req, res) => {
+app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const { id_onibus, id_usuario } = req.params;
 
   const hoje = new Date();
@@ -364,7 +364,6 @@ router.post("/presenca/adicionar", async (req, res) => {
         .status(400)
         .json({ error: "Todos os campos são obrigatórios." });
     }
-    console.log("data recebida do req", data);
 
     const presencaRegistrada = await Presenca.registrarPresenca({
       id_usuario,
@@ -390,6 +389,7 @@ router.put("/presenca/editar", async (req, res) => {
 
   try {
     // Verifica se a presença já existe
+
     const presencaExistente = await Presenca.verificaPresenca(id_usuario, data);
 
     const id_presenca = presencaExistente.id_presenca;

@@ -6,9 +6,7 @@ const Presenca = {
     const { id_usuario, id_onibus, status, data, status_presenca } =
       dadosPresenca;
 
-    console.log("dados do registrar ", dadosPresenca);
     let dataFormatada, dataObj;
-    console.log("data de hoje: ", data);
 
     try {
       dataObj = converterData(data); // Usa dataHoje para validação
@@ -20,7 +18,6 @@ const Presenca = {
     const dia_semana = obterDiaSemana(dataObj);
 
     // Verifica se já existe uma presença registrada
-    console.log("para verrficar: ", id_usuario, dataFormatada);
     const presencaExistente = await this.verificaPresenca(
       id_usuario,
       dataFormatada
@@ -39,6 +36,11 @@ const Presenca = {
       );
     }
 
+    let esta_presente = false;
+    if (status_presenca === "PRESENTE") {
+      esta_presente = true;
+    }
+
     const id_presenca = uuidv4();
     const sql = `
       INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, STATUS, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
@@ -52,7 +54,7 @@ const Presenca = {
         dataFormatada,
         dia_semana,
         status,
-        status_presenca,
+        esta_presente,
         id_usuario,
         id_onibus,
       ]);
@@ -63,11 +65,11 @@ const Presenca = {
     }
   },
 
-  async verificaPresenca(userId, data) {
+  async verificaPresenca(id_usuario, data) {
     const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1 AND DATA_CHAMADA = $2`;
 
     try {
-      const result = await conexaoBanco.unsafe(sql, [userId, data]);
+      const result = await conexaoBanco.unsafe(sql, [id_usuario, data]);
       return result[0];
     } catch (err) {
       console.error("Erro ao verificar presença:", err);
@@ -75,10 +77,10 @@ const Presenca = {
     }
   },
 
-  async deletarPresenca(userId) {
+  async deletarPresenca(id_usuario) {
     const sql = `DELETE FROM PRESENCA WHERE ID_USUARIO = $1`;
     try {
-      await conexaoBanco.unsafe(sql, [userId]);
+      await conexaoBanco.unsafe(sql, [id_usuario]);
       return true;
     } catch (err) {
       console.error("Erro ao deletar presença:", err);
@@ -105,7 +107,7 @@ const Presenca = {
     return true;
   },
 
-  async validarPresenca(onibusId, userId) {
+  async validarPresenca(id_onibus, id_usuario) {
     const hoje = new Date();
 
     const ano = hoje.getFullYear();
@@ -118,9 +120,9 @@ const Presenca = {
 
     try {
       const result = await conexaoBanco.unsafe(sql, [
-        userId,
+        id_usuario,
         dataHoje,
-        onibusId,
+        id_onibus,
       ]);
       return result[0];
     } catch (err) {
@@ -168,7 +170,6 @@ function obterDiaSemana(data) {
 }
 
 function converterData(dataHoje) {
-  console.log("do converter data:", dataHoje);
   if (!dataHoje || typeof dataHoje !== "string") {
     throw new Error(
       "Data inválida. Esperado uma string no formato YYYY-MM-DD."
