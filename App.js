@@ -185,6 +185,7 @@ router.post("/usuario/login", async (req, res) => {
 
   const usuarioExiste = await Aluno.verificaAlunoPorEmail(email);
 
+  console.log("usuario do login", usuarioExiste);
   if (!usuarioExiste) {
     return res.status(404).json({ msg: "Aluno não encontrado!" });
   }
@@ -199,6 +200,7 @@ router.post("/usuario/login", async (req, res) => {
   try {
     const segredo = process.env.SECRET;
     const userId = usuarioExiste.id_usuario;
+    const e_admin = usuarioExiste.e_admin;
     const token = jwt.sign(
       {
         id: usuarioExiste.id_usuario, // Use o id_aluno como chave do payload
@@ -211,6 +213,8 @@ router.post("/usuario/login", async (req, res) => {
       token,
       msg: "Id do usuario: ",
       userId,
+      msg: "admin=",
+      e_admin,
     });
   } catch (error) {
     console.log(error);
