@@ -292,21 +292,28 @@ router.delete(
 /*------------------------------------------ROTAS PRESENCA---------------------------------------------------------------------------*/
 
 //buscar presencas
-router.get("/presenca/buscar", async (req, res) => {
-  try {
-    const presencas = await Presenca.buscarPresencas();
+router.get(
+  "/presenca/buscar",
+  verificarToken,
+  verificarAdmin,
+  async (req, res) => {
+    try {
+      const presencas = await Presenca.buscarPresencas();
 
-    if (!presencas) {
-      return res.status(404).json({ msg: "Nenhum onibus encontrado!" });
+      if (!presencas) {
+        return res
+          .status(404)
+          .json({ msg: "Nenhuma presença encontrada para hoje!" });
+      }
+      return res.status(200).json({ presencas });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ msg: "Ocorreu um erro ao buscar as presenças!" });
     }
-    return res.status(200).json({ presencas });
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(500)
-      .json({ msg: "Ocorreu um erro ao buscar os onibus!" });
   }
-});
+);
 
 app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const { id_onibus, id_usuario } = req.params;

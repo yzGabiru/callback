@@ -89,9 +89,17 @@ const Presenca = {
   },
 
   async buscarPresencas() {
-    const sql = `SELECT * FROM PRESENCA ORDER BY DATA_CHAMADA DESC`;
+    const hoje = new Date();
+
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoje.getDate()).padStart(2, "0");
+
+    const dataHoje = `${ano}-${mes}-${dia}`;
+
+    const sql = `SELECT * FROM PRESENCA WHERE DATA_CHAMADA = $1`;
     try {
-      const result = await conexaoBanco.unsafe(sql, []);
+      const result = await conexaoBanco.unsafe(sql, [dataHoje]);
       return result;
     } catch (err) {
       console.error("Erro ao buscar presenças:", err);
