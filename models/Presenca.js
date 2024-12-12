@@ -100,6 +100,17 @@ const Presenca = {
       throw new Error("Erro ao buscar presenças");
     }
   },
+  async buscarPresencasPorData() {
+    const data_hoje = pegarDataHoje();
+    const sql = `SELECT * FROM PRESENCA WHERE DATA_CHAMADA = $1`;
+    try {
+      const result = await conexaoBanco.unsafe(sql, [data_hoje]);
+      return result;
+    } catch (err) {
+      console.error("Erro ao buscar presenças:", err);
+      throw new Error("Erro ao buscar presenças");
+    }
+  },
 
   async verificarDiaSemana(dia_semana) {
     if (dia_semana === "sabado" || dia_semana === "domingo") {
@@ -110,20 +121,14 @@ const Presenca = {
   },
 
   async validarPresenca(id_onibus, id_usuario) {
-    const hoje = new Date();
-
-    const ano = hoje.getFullYear();
-    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-    const dia = String(hoje.getDate()).padStart(2, "0");
-
-    const dataHoje = `${ano}-${mes}-${dia}`;
+    const data_hoje = pegarDataHoje();
 
     const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1 AND DATA_CHAMADA = $2 AND ID_ONIBUS = $3`;
 
     try {
       const result = await conexaoBanco.unsafe(sql, [
         id_usuario,
-        dataHoje,
+        data_hoje,
         id_onibus,
       ]);
       return result[0];
@@ -196,6 +201,18 @@ function converterData(dataHoje) {
   }
 
   return dataObj;
+}
+
+function pegarDataHoje() {
+  const hoje = new Date();
+
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+
+  const dataHoje = `${ano}-${mes}-${dia}`;
+
+  return dataHoje;
 }
 
 export { Presenca };

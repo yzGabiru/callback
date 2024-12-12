@@ -184,7 +184,6 @@ router.post("/usuario/login", async (req, res) => {
 
   const usuarioExiste = await Aluno.verificaAlunoPorEmail(email);
 
-  console.log("usuario do login", usuarioExiste);
   if (!usuarioExiste) {
     return res.status(404).json({ msg: "Aluno não encontrado!" });
   }
@@ -308,6 +307,26 @@ router.get("/presenca/buscar/:id", async (req, res) => {
     res.status(400).json({ erro: err.msg });
   }
 });
+
+router.get(
+  "/presenca/buscar/",
+  verificarToken,
+  verificarAdmin,
+  async (req, res) => {
+    try {
+      const presencas = await Presenca.buscarPresencasPorData();
+      if (!presencas) {
+        return res
+          .status(404)
+          .json({ msg: "Nenhuma presença encontrada para hoje!" });
+      }
+      return res.status(200).json({ presencas });
+    } catch (err) {
+      console.error("Erro:", err);
+      res.status(400).json({ erro: err.msg });
+    }
+  }
+);
 
 app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const { id_onibus, id_usuario } = req.params;
