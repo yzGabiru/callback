@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
-    const { id_usuario, id_onibus, status, data, status_presenca } =
+    const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
       dadosPresenca;
 
     let dataFormatada, dataObj;
@@ -43,7 +43,7 @@ const Presenca = {
 
     const id_presenca = uuidv4();
     const sql = `
-      INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, STATUS, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
+      INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, VAI, VOLTA, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
@@ -53,7 +53,8 @@ const Presenca = {
         id_presenca,
         dataFormatada,
         dia_semana,
-        status,
+        vai,
+        volta,
         esta_presente,
         id_usuario,
         id_onibus,
@@ -139,11 +140,11 @@ const Presenca = {
     }
   },
 
-  async atualizarPresenca(id_presenca, status_presenca, status) {
+  async atualizarPresenca(id_presenca, status_presenca, vai, volta) {
     const sql = `
       UPDATE PRESENCA
-      SET STATUS_PRESENCA = $1, STATUS = $2
-      WHERE ID_PRESENCA = $3
+      SET STATUS_PRESENCA = $1, VAI = $2, VOLTA = $3
+      WHERE ID_PRESENCA = $4
       RETURNING *;
     `;
 
@@ -152,7 +153,8 @@ const Presenca = {
     try {
       const result = await conexaoBanco.unsafe(sql, [
         status_prese,
-        status,
+        vai,
+        volta,
         id_presenca,
       ]);
       return result[0];

@@ -346,7 +346,8 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
         const presencaRegistrada = await Presenca.registrarPresenca({
           id_usuario,
           id_onibus,
-          status: "vai_volta",
+          vai: true,
+          volta: true,
           data,
           status_presenca: "PRESENTE",
         });
@@ -368,9 +369,17 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
 //rota adicionar presença
 router.post("/presenca/adicionar", async (req, res) => {
   try {
-    const { id_usuario, id_onibus, status, data, status_presenca } = req.body;
+    const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
+      req.body;
 
-    if (!id_usuario || !id_onibus || !status || !data || !status_presenca) {
+    if (
+      !id_usuario ||
+      !id_onibus ||
+      !vai ||
+      !volta ||
+      !data ||
+      !status_presenca
+    ) {
       return res
         .status(400)
         .json({ error: "Todos os campos são obrigatórios." });
@@ -379,7 +388,8 @@ router.post("/presenca/adicionar", async (req, res) => {
     const presencaRegistrada = await Presenca.registrarPresenca({
       id_usuario,
       id_onibus,
-      status,
+      vai,
+      volta,
       data,
       status_presenca,
     });
@@ -392,9 +402,16 @@ router.post("/presenca/adicionar", async (req, res) => {
 });
 
 router.put("/presenca/editar", async (req, res) => {
-  const { id_usuario, id_onibus, status_presenca, data, status } = req.body;
+  const { id_usuario, id_onibus, status_presenca, data, vai, volta } = req.body;
 
-  if (!id_usuario || !id_onibus || !status_presenca || !data || !status) {
+  if (
+    !id_usuario ||
+    !id_onibus ||
+    !status_presenca ||
+    !data ||
+    !vai ||
+    !volta
+  ) {
     return res.status(400).json({ error: "Todos os campos são obrigatórios." });
   }
 
@@ -409,7 +426,8 @@ router.put("/presenca/editar", async (req, res) => {
     const presencaAtualizada = await Presenca.atualizarPresenca(
       id_presenca,
       status_presenca,
-      status
+      vai,
+      volta
     );
 
     res
