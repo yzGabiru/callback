@@ -27,7 +27,6 @@ async function verificarToken(req, res, next) {
   if (!token) {
     return res.status(401).json({ msg: "Acesso Negado!" });
   }
-
   try {
     const segredo = process.env.SECRET;
     const tokenBruto = jwt.verify(token, segredo); // Verifica o token
@@ -282,8 +281,8 @@ router.delete(
       if (err.message === "Onibus não encontrado!") {
         res.status(404).json({ msg: "Onibus não encontrado!" });
       } else {
-        console.log(err);
-        res.status(500).json({ msg: "Ocorreu um erro no servidor!" });
+        console.error("Erro:", err);
+        res.status(400).json({ erro: err.message });
       }
     }
   }
@@ -292,28 +291,23 @@ router.delete(
 /*------------------------------------------ROTAS PRESENCA---------------------------------------------------------------------------*/
 
 //buscar presencas
-router.get(
-  "/presenca/buscar",
-  verificarToken,
-  verificarAdmin,
-  async (req, res) => {
-    try {
-      const presencas = await Presenca.buscarPresencas();
+router.get("/presenca/buscar/:id", async (req, res) => {
+  const { id } = req.params;
 
-      if (!presencas) {
-        return res
-          .status(404)
-          .json({ msg: "Nenhuma presença encontrada para hoje!" });
-      }
-      return res.status(200).json({ presencas });
-    } catch (err) {
-      console.log(err);
+  try {
+    const presencas = await Presenca.buscarPresencas(id);
+
+    if (!presencas) {
       return res
-        .status(500)
-        .json({ msg: "Ocorreu um erro ao buscar as presenças!" });
+        .status(404)
+        .json({ msg: "Nenhuma presença encontrada para hoje!" });
     }
+    return res.status(200).json({ presencas });
+  } catch (err) {
+    console.error("Erro:", err);
+    res.status(400).json({ erro: err.msg });
   }
-);
+});
 
 app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const { id_onibus, id_usuario } = req.params;
@@ -368,6 +362,7 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
 
 //rota adicionar presença
 router.post("/presenca/adicionar", async (req, res) => {
+  console.log(req.body);
   try {
     const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
       req.body;
@@ -375,8 +370,8 @@ router.post("/presenca/adicionar", async (req, res) => {
     if (
       !id_usuario ||
       !id_onibus ||
-      !vai ||
-      !volta ||
+      typeof vai !== "boolean" || // Verifica explicitamente se vai é boolean
+      typeof volta !== "boolean" || // Verifica explicitamente se volta é boolean
       !data ||
       !status_presenca
     ) {
@@ -402,30 +397,16 @@ router.post("/presenca/adicionar", async (req, res) => {
 });
 
 router.put("/presenca/editar", async (req, res) => {
-  const { id_usuario, id_onibus, status_presenca, data, vai, volta } = req.body;
-
-  if (
-    !id_usuario ||
-    !id_onibus ||
-    !status_presenca ||
-    !data ||
-    !vai ||
-    !volta
-  ) {
-    return res.status(400).json({ error: "Todos os campos são obrigatórios." });
-  }
+  const { id_usuario, id_onibus, vai, volta, data } = req.body;
 
   try {
     // Verifica se a presença já existe
-
     const presencaExistente = await Presenca.verificaPresenca(id_usuario, data);
-
     const id_presenca = presencaExistente.id_presenca;
 
     // Atualiza o status de presença
     const presencaAtualizada = await Presenca.atualizarPresenca(
       id_presenca,
-      status_presenca,
       vai,
       volta
     );
@@ -434,8 +415,8 @@ router.put("/presenca/editar", async (req, res) => {
       .status(200)
       .json({ msg: "Presença atualizada com sucesso!", presencaAtualizada });
   } catch (err) {
-    console.error("Erro ao editar presença:", err);
-    res.status(500).json({ error: "Erro ao editar presença" });
+    console.error("Erro:", err);
+    res.status(500).json({ erro: err.message });
   }
 });
 
@@ -454,8 +435,8 @@ router.delete(
       if (err.message === "Presença não encontrada!") {
         res.status(404).json({ msg: "Presença não encontrada!" });
       } else {
-        console.log(err);
-        res.status(500).json({ msg: "Ocorreu um erro no servidor!" });
+        console.error("Erro:", err);
+        res.status(500).json({ erro: err.message });
       }
     }
   }

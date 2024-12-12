@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
+    console.log(dadosPresenca);
     const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
       dadosPresenca;
 
@@ -44,7 +45,7 @@ const Presenca = {
     const id_presenca = uuidv4();
     const sql = `
       INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, VAI, VOLTA, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *;
     `;
 
@@ -89,18 +90,10 @@ const Presenca = {
     }
   },
 
-  async buscarPresencas() {
-    const hoje = new Date();
-
-    const ano = hoje.getFullYear();
-    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-    const dia = String(hoje.getDate()).padStart(2, "0");
-
-    const dataHoje = `${ano}-${mes}-${dia}`;
-
-    const sql = `SELECT * FROM PRESENCA WHERE DATA_CHAMADA = $1`;
+  async buscarPresencas(id_usuario) {
+    const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1`;
     try {
-      const result = await conexaoBanco.unsafe(sql, [dataHoje]);
+      const result = await conexaoBanco.unsafe(sql, [id_usuario]);
       return result;
     } catch (err) {
       console.error("Erro ao buscar presenças:", err);
@@ -140,7 +133,7 @@ const Presenca = {
     }
   },
 
-  async atualizarPresenca(id_presenca, status_presenca, vai, volta) {
+  async atualizarPresenca(id_presenca, vai, volta) {
     const sql = `
       UPDATE PRESENCA
       SET STATUS_PRESENCA = $1, VAI = $2, VOLTA = $3
@@ -148,7 +141,7 @@ const Presenca = {
       RETURNING *;
     `;
 
-    const status_prese = status_presenca === "PRESENTE";
+    const status_prese = true;
 
     try {
       const result = await conexaoBanco.unsafe(sql, [

@@ -41,7 +41,6 @@ const Aluno = {
     const sql = `SELECT * FROM USUARIO WHERE ID_USUARIO = $1`;
     try {
       const result = await conexaoBanco.unsafe(sql, [id_usuario]);
-      console.log(result);
       return result[0];
     } catch (err) {
       console.error("Erro ao buscar no banco:", err);
