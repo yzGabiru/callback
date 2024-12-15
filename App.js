@@ -439,6 +439,25 @@ router.put("/presenca/editar", async (req, res) => {
   }
 });
 
+router.put("/presenca/mudarstatus", async (req, res) => {
+  const { id_presenca, status_presenca } = req.body;
+  try {
+    const presencaAtualizada = await Presenca.mudarStatusPresenca(
+      id_presenca,
+      status_presenca
+    );
+
+    if (!presencaAtualizada) {
+      return res.status(404).json({ erro: "Presença não encontrada" });
+    }
+
+    return res.status(200).json(presencaAtualizada); // Retorna os dados atualizados
+  } catch (err) {
+    console.error("Erro:", err);
+    return res.status(500).json({ erro: err.message });
+  }
+});
+
 //rota deletar presença
 router.delete(
   "/presenca/deletar",

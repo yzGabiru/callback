@@ -161,6 +161,32 @@ const Presenca = {
       throw new Error("Erro ao atualizar presença");
     }
   },
+  async mudarStatusPresenca(id_presenca, status_presenca) {
+    let novoStatus = false;
+    if (status_presenca === "PRESENTE") {
+      novoStatus = true;
+    }
+
+    const sql = `
+      UPDATE PRESENCA 
+      SET STATUS_PRESENCA = $1 
+      WHERE ID_PRESENCA = $2 
+      RETURNING *;
+    `;
+    try {
+      const result = await conexaoBanco.unsafe(sql, [novoStatus, id_presenca]);
+
+      // Verificar se o resultado não está vazio
+      if (result.length === 0) {
+        throw new Error(`Presença com ID ${id_presenca} não encontrada`);
+      }
+
+      return result[0]; // Retorna os dados atualizados
+    } catch (err) {
+      console.error("Erro ao mudar status da presença:", err);
+      throw new Error("Erro ao mudar status da presença");
+    }
+  },
 };
 
 function obterDiaSemana(data) {
