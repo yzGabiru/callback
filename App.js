@@ -111,7 +111,6 @@ router.get("/usuario/buscarUsuario", async (req, res) => {
 // Rota para criar um aluno
 router.post("/usuario/registro", async (req, res) => {
   // Antes de tentar criar o aluno
-  console.log("Dados recebidos para cadastro:", req.body);
 
   const { id_usuario, nome, email, senha, confirmarSenha, numeroCelular } =
     req.body;
@@ -243,7 +242,6 @@ router.post(
   verificarToken,
   verificarAdmin,
   async (req, res) => {
-    console.log(req.body);
     const { id_onibus, nome_onibus, descricao } = req.body;
 
     if (!nome_onibus) {
@@ -381,18 +379,23 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
 
 //rota adicionar presença
 router.post("/presenca/adicionar", async (req, res) => {
-  console.log(req.body);
   try {
-    const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
-      req.body;
+    const {
+      id_usuario,
+      id_onibus,
+      vai,
+      volta,
+      data,
+      presenca_ida,
+      presenca_volta,
+    } = req.body;
 
     if (
       !id_usuario ||
       !id_onibus ||
       typeof vai !== "boolean" || // Verifica explicitamente se vai é boolean
       typeof volta !== "boolean" || // Verifica explicitamente se volta é boolean
-      !data ||
-      !status_presenca
+      !data
     ) {
       return res
         .status(400)
@@ -405,7 +408,8 @@ router.post("/presenca/adicionar", async (req, res) => {
       vai,
       volta,
       data,
-      status_presenca,
+      presenca_ida,
+      presenca_volta,
     });
 
     res.status(200).json(presencaRegistrada);
@@ -416,7 +420,7 @@ router.post("/presenca/adicionar", async (req, res) => {
 });
 
 router.put("/presenca/editar", async (req, res) => {
-  const { id_usuario, id_onibus, vai, volta, data } = req.body;
+  const { id_usuario, vai, volta, data } = req.body;
 
   try {
     // Verifica se a presença já existe
@@ -440,11 +444,12 @@ router.put("/presenca/editar", async (req, res) => {
 });
 
 router.put("/presenca/mudarstatus", async (req, res) => {
-  const { id_presenca, status_presenca } = req.body;
+  const { id_presenca, presenca_ida, presenca_volta } = req.body;
   try {
     const presencaAtualizada = await Presenca.mudarStatusPresenca(
       id_presenca,
-      status_presenca
+      presenca_ida,
+      presenca_volta
     );
 
     if (!presencaAtualizada) {
@@ -465,7 +470,6 @@ router.delete(
   verificarAdmin,
   async (req, res) => {
     const { id_usuario } = req.body;
-    console.log(id_usuario);
     try {
       const presencaDeletada = await Presenca.deletarPresenca(id_usuario);
       res.status(200).json({ msg: "Presença deletada com sucesso!" });

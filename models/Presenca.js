@@ -3,9 +3,15 @@ import { v4 as uuidv4 } from "uuid";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
-    console.log(dadosPresenca);
-    const { id_usuario, id_onibus, vai, volta, data, status_presenca } =
-      dadosPresenca;
+    const {
+      id_usuario,
+      id_onibus,
+      vai,
+      volta,
+      data,
+      presenca_ida,
+      presenca_volta,
+    } = dadosPresenca;
 
     let dataFormatada, dataObj;
 
@@ -37,15 +43,10 @@ const Presenca = {
       );
     }
 
-    let esta_presente = false;
-    if (status_presenca === "PRESENTE") {
-      esta_presente = true;
-    }
-
     const id_presenca = uuidv4();
     const sql = `
-      INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, VAI, VOLTA, STATUS_PRESENCA, ID_USUARIO, ID_ONIBUS)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO PRESENCA (ID_PRESENCA, DATA_CHAMADA, DIA_SEMANA, VAI, VOLTA, PRESENCA_IDA, PRESENCA_VOLTA, ID_USUARIO, ID_ONIBUS)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *;
     `;
 
@@ -56,7 +57,8 @@ const Presenca = {
         dia_semana,
         vai,
         volta,
-        esta_presente,
+        presenca_ida,
+        presenca_volta,
         id_usuario,
         id_onibus,
       ]);
@@ -141,16 +143,30 @@ const Presenca = {
   async atualizarPresenca(id_presenca, vai, volta) {
     const sql = `
       UPDATE PRESENCA
-      SET STATUS_PRESENCA = $1, VAI = $2, VOLTA = $3
-      WHERE ID_PRESENCA = $4
+      SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2, VAI = $3, VOLTA = $4
+      WHERE ID_PRESENCA = $5
       RETURNING *;
     `;
 
-    const status_prese = true;
+    //fazer uma verificação de horario
+    const horaAtual = new Date();
+    const hora = horaAtual.getHours(); //pega a hora tual
+
+    let presenca_ida = false;
+    let presenca_volta = false;
+    //se menor que 6 horas da tarde ele atualiza presenca ida
+    if (hora < 18) {
+      presenca_ida = true;
+    }
+    //se maior que 6 horas da tarde ele atualiza presenca volta
+    if (hora > 18) {
+      presenca_volta = true;
+    }
 
     try {
       const result = await conexaoBanco.unsafe(sql, [
-        status_prese,
+        presenca_ida,
+        presenca_volta,
         vai,
         volta,
         id_presenca,
@@ -161,20 +177,19 @@ const Presenca = {
       throw new Error("Erro ao atualizar presença");
     }
   },
-  async mudarStatusPresenca(id_presenca, status_presenca) {
-    let novoStatus = false;
-    if (status_presenca === "PRESENTE") {
-      novoStatus = true;
-    }
-
+  async mudarStatusPresenca(id_presenca, presenca_ida, presenca_volta) {
     const sql = `
       UPDATE PRESENCA 
-      SET STATUS_PRESENCA = $1 
-      WHERE ID_PRESENCA = $2 
+      SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2 
+      WHERE ID_PRESENCA = $3
       RETURNING *;
     `;
     try {
-      const result = await conexaoBanco.unsafe(sql, [novoStatus, id_presenca]);
+      const result = await conexaoBanco.unsafe(sql, [
+        presenca_ida,
+        presenca_volta,
+        id_presenca,
+      ]);
 
       // Verificar se o resultado não está vazio
       if (result.length === 0) {
