@@ -92,10 +92,10 @@ const Presenca = {
     }
   },
 
-  async buscarPresencas(id_usuario) {
-    const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1`;
+  async buscarPresencas(id_usuario, id_onibus) {
+    const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1 AND ID_ONIBUS = $2`;
     try {
-      const result = await conexaoBanco.unsafe(sql, [id_usuario]);
+      const result = await conexaoBanco.unsafe(sql, [id_usuario, id_onibus]);
       return result;
     } catch (err) {
       console.error("Erro ao buscar presenças:", err);
@@ -140,11 +140,11 @@ const Presenca = {
     }
   },
 
-  async atualizarPresenca(id_presenca, vai, volta) {
+  async atualizarPresenca(id_presenca, id_onibus, vai, volta) {
     const sql = `
       UPDATE PRESENCA
       SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2, VAI = $3, VOLTA = $4
-      WHERE ID_PRESENCA = $5
+      WHERE ID_PRESENCA = $5 AND ID_ONIBUS = $6
       RETURNING *;
     `;
 
@@ -155,11 +155,11 @@ const Presenca = {
     let presenca_ida = false;
     let presenca_volta = false;
     //se menor que 6 horas da tarde ele atualiza presenca ida
-    if (hora < 18) {
+    if (hora <= 18) {
       presenca_ida = true;
     }
     //se maior que 6 horas da tarde ele atualiza presenca volta
-    if (hora > 18) {
+    if (hora >= 19) {
       presenca_volta = true;
     }
 
@@ -170,6 +170,7 @@ const Presenca = {
         vai,
         volta,
         id_presenca,
+        id_onibus,
       ]);
       return result[0];
     } catch (err) {

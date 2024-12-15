@@ -242,7 +242,8 @@ router.post(
   verificarToken,
   verificarAdmin,
   async (req, res) => {
-    const { id_onibus, nome_onibus, descricao } = req.body;
+    const { nome_onibus, descricao } = req.body;
+    const id_onibus = uuidv4();
 
     if (!nome_onibus) {
       return res.status(400).json({ error: "Nome é obrigatório." });
@@ -288,11 +289,11 @@ router.delete(
 /*------------------------------------------ROTAS PRESENCA---------------------------------------------------------------------------*/
 
 //buscar presencas
-router.get("/presenca/buscar/:id", async (req, res) => {
-  const { id } = req.params;
+router.get("/presenca/buscar/:id/:id_onibus", async (req, res) => {
+  const { id, id_onibus } = req.params;
 
   try {
-    const presencas = await Presenca.buscarPresencas(id);
+    const presencas = await Presenca.buscarPresencas(id, id_onibus);
 
     if (!presencas) {
       return res
@@ -420,16 +421,19 @@ router.post("/presenca/adicionar", async (req, res) => {
 });
 
 router.put("/presenca/editar", async (req, res) => {
-  const { id_usuario, vai, volta, data } = req.body;
+  const { id_usuario, id_onibus, data } = req.body;
 
   try {
     // Verifica se a presença já existe
     const presencaExistente = await Presenca.verificaPresenca(id_usuario, data);
     const id_presenca = presencaExistente.id_presenca;
+    const vai = presencaExistente.vai;
+    const volta = presencaExistente.volta;
 
     // Atualiza o status de presença
     const presencaAtualizada = await Presenca.atualizarPresenca(
       id_presenca,
+      id_onibus,
       vai,
       volta
     );
