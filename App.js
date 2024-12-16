@@ -66,7 +66,7 @@ function verificarAdmin(req, res, next) {
 
 //rota buscar todos os alunos
 router.get(
-  "/usuario/pegarTodos",
+  "/usuario/pegarTodos/",
   verificarToken,
   verificarAdmin,
   async (req, res) => {
@@ -307,6 +307,24 @@ router.get("/presenca/buscar/:id/:id_onibus", async (req, res) => {
   }
 });
 
+router.get("/presenca/buscarUsuariosOnibus/:id_onibus", async (req, res) => {
+  const { id_onibus } = req.params;
+
+  try {
+    const presencas = await Presenca.buscarPresencasOnibus(id_onibus);
+
+    if (!presencas) {
+      return res
+        .status(404)
+        .json({ msg: "Nenhuma presença encontrada para hoje!" });
+    }
+    return res.status(200).json({ presencas });
+  } catch (err) {
+    console.error("Erro:", err);
+    res.status(400).json({ erro: err.msg });
+  }
+});
+
 router.get(
   "/presenca/buscar/",
   verificarToken,
@@ -327,7 +345,7 @@ router.get(
   }
 );
 
-app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
+app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const { id_onibus, id_usuario } = req.params;
 
   const hoje = new Date();
@@ -349,6 +367,21 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
     );
 
     if (presencaRetornada) {
+      const id_presenca = presencaRetornada.id_presenca;
+      const vai = presencaRetornada.vai;
+      const volta = presencaRetornada.volta;
+      try {
+        const presencaEditada = await Presenca.atualizarPresenca(
+          id_presenca,
+          id_onibus,
+          vai,
+          volta
+        );
+        return res.status(200).json({ presencaEditada });
+      } catch (err) {
+        console.error("Erro:", err);
+        return res.status(400).json({ erro: err.msg });
+      }
       return res
         .status(200)
         .json({ msg: "Presença encontrada.", presencaRetornada });
@@ -361,7 +394,8 @@ app.get("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
           vai: true,
           volta: true,
           data,
-          status_presenca: "PRESENTE",
+          presenca_ida: true,
+          presenca_volta: false,
         });
 
         return res.status(200).json({ presencaRetornada: presencaRegistrada });
@@ -417,33 +451,6 @@ router.post("/presenca/adicionar", async (req, res) => {
   } catch (err) {
     console.error("Erro:", err);
     res.status(400).json({ erro: err.message });
-  }
-});
-
-router.put("/presenca/editar", async (req, res) => {
-  const { id_usuario, id_onibus, data } = req.body;
-
-  try {
-    // Verifica se a presença já existe
-    const presencaExistente = await Presenca.verificaPresenca(id_usuario, data);
-    const id_presenca = presencaExistente.id_presenca;
-    const vai = presencaExistente.vai;
-    const volta = presencaExistente.volta;
-
-    // Atualiza o status de presença
-    const presencaAtualizada = await Presenca.atualizarPresenca(
-      id_presenca,
-      id_onibus,
-      vai,
-      volta
-    );
-
-    res
-      .status(200)
-      .json({ msg: "Presença atualizada com sucesso!", presencaAtualizada });
-  } catch (err) {
-    console.error("Erro:", err);
-    res.status(500).json({ erro: err.message });
   }
 });
 

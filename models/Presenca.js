@@ -19,20 +19,24 @@ const Presenca = {
       dataObj = converterData(data); // Usa dataHoje para validação
       dataFormatada = data; // Mantém o formato recebido (YYYY-MM-DD)
     } catch (err) {
-      throw new Error(err.message);
+      throw new Error(`Erro na conversão de data: ${err.message}`);
     }
 
     const dia_semana = obterDiaSemana(dataObj);
 
     // Verifica se já existe uma presença registrada
-    const presencaExistente = await this.verificaPresenca(
-      id_usuario,
-      dataFormatada
-    );
-    if (presencaExistente) {
-      throw new Error(
-        `O aluno já registrou presença para a ${dia_semana}-feira.`
+    try {
+      const presencaExistente = await this.verificaPresenca(
+        id_usuario,
+        dataFormatada
       );
+      if (presencaExistente) {
+        throw new Error(
+          `O aluno já registrou presença para a ${dia_semana}-feira.`
+        );
+      }
+    } catch (err) {
+      throw new Error(`Erro ao verificar presença existente: ${err.message}`);
     }
 
     // Verifica se é um dia válido
@@ -65,7 +69,9 @@ const Presenca = {
       return result[0];
     } catch (err) {
       console.error("Erro ao registrar presença:", err);
-      throw new Error("Erro ao registrar presença");
+      throw new Error(
+        `Erro ao registrar presença no banco de dados: ${err.message}`
+      );
     }
   },
 
@@ -96,6 +102,17 @@ const Presenca = {
     const sql = `SELECT * FROM PRESENCA WHERE ID_USUARIO = $1 AND ID_ONIBUS = $2`;
     try {
       const result = await conexaoBanco.unsafe(sql, [id_usuario, id_onibus]);
+      return result;
+    } catch (err) {
+      console.error("Erro ao buscar presenças:", err);
+      throw new Error("Erro ao buscar presenças");
+    }
+  },
+
+  async buscarPresencasOnibus(id_onibus) {
+    const sql = `SELECT * FROM PRESENCA WHERE ID_ONIBUS = $1`;
+    try {
+      const result = await conexaoBanco.unsafe(sql, [id_onibus]);
       return result;
     } catch (err) {
       console.error("Erro ao buscar presenças:", err);
@@ -139,45 +156,120 @@ const Presenca = {
       throw new Error("Ocorreu um erro");
     }
   },
+  //consertar a logica do horario
+  // async atualizarPresenca(id_presenca, id_onibus, vai, volta) {
+  //   const sql = `
+  //     UPDATE PRESENCA
+  //     SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2, VAI = $3, VOLTA = $4
+  //     WHERE ID_PRESENCA = $5 AND ID_ONIBUS = $6
+  //     RETURNING *;
+  //   `;
+
+  //   //fazer uma verificação de horario
+  //   const horaAtual = new Date();
+  //   const hora = horaAtual.getHours(); //pega a hora tual
+
+  //   let presenca_ida = false;
+  //   let presenca_volta = false;
+  //   //se menor que 6 horas da tarde ele atualiza presenca ida
+  //   if (hora <= 18 && vai === true) {
+  //     presenca_ida = true;
+  //   }
+  //   //se maior que 6 horas da tarde ele atualiza presenca volta
+  //   if (hora >= 19) {
+  //     presenca_volta = true;
+  //   }
+
+  //   try {
+  //     const result = await conexaoBanco.unsafe(sql, [
+  //       presenca_ida,
+  //       presenca_volta,
+  //       vai,
+  //       volta,
+  //       id_presenca,
+  //       id_onibus,
+  //     ]);
+  //     return result[0];
+  //   } catch (err) {
+  //     console.error("Erro ao atualizar presença:", err);
+  //     throw new Error("Erro ao atualizar presença");
+  //   }
+  // },
 
   async atualizarPresenca(id_presenca, id_onibus, vai, volta) {
-    const sql = `
-      UPDATE PRESENCA
-      SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2, VAI = $3, VOLTA = $4
-      WHERE ID_PRESENCA = $5 AND ID_ONIBUS = $6
-      RETURNING *;
-    `;
+    // Variáveis de presença inicialmente nulas
+    let presenca_ida = null;
+    let presenca_volta = null;
 
-    //fazer uma verificação de horario
+    // Pega a hora atual
     const horaAtual = new Date();
-    const hora = horaAtual.getHours(); //pega a hora tual
+    const hora = horaAtual.getHours(); // Pega a hora atual
 
-    let presenca_ida = false;
-    let presenca_volta = false;
-    //se menor que 6 horas da tarde ele atualiza presenca ida
-    if (hora <= 18) {
+    // Lógica para registrar a presença com base no horário e escolha do aluno
+    if (hora <= 18 && vai === true) {
+      // Se é antes das 18h e o aluno vai, registra ida
       presenca_ida = true;
     }
-    //se maior que 6 horas da tarde ele atualiza presenca volta
-    if (hora >= 19) {
+    if (hora >= 19 && volta === true) {
+      // Se é após as 18h e o aluno volta, registra volta
       presenca_volta = true;
     }
 
-    try {
-      const result = await conexaoBanco.unsafe(sql, [
-        presenca_ida,
-        presenca_volta,
-        vai,
-        volta,
+    // Lógica de verificação das opções válidas para 'vai' e 'volta'
+    if (vai === true && volta === true) {
+      // Vai e volta: ambos devem ser marcados como presentes
+      // Não precisa fazer nada aqui, pois as presenças já foram marcadas acima
+    } else if (vai === true && volta === false) {
+      // Só vai: marca apenas ida e não volta
+      presenca_volta = null;
+    } else if (vai === false && volta === true) {
+      // Só volta: marca apenas volta e não ida
+      presenca_ida = null;
+    } else {
+      console.log(
         id_presenca,
         id_onibus,
+        vai,
+        volta,
+        presenca_ida,
+        presenca_volta
+      );
+      // Caso não tenha marcado nem ida nem volta, lança erro
+      throw new Error(
+        "Escolha inválida: deve marcar pelo menos 'vai' ou 'volta'."
+      );
+    }
+
+    // Consulta SQL com COALESCE para não sobrescrever valores nulos
+    const sql = `
+      UPDATE PRESENCA
+      SET PRESENCA_IDA = COALESCE($1::BOOLEAN, PRESENCA_IDA), 
+          PRESENCA_VOLTA = COALESCE($2::BOOLEAN, PRESENCA_VOLTA)
+      WHERE ID_PRESENCA = $3 AND ID_ONIBUS = $4
+      RETURNING *;
+    `;
+
+    try {
+      const result = await conexaoBanco.unsafe(sql, [
+        presenca_ida, // Valor para PRESENCA_IDA
+        presenca_volta, // Valor para PRESENCA_VOLTA
+        id_presenca, // ID_PRESENCA
+        id_onibus, // ID_ONIBUS
       ]);
-      return result[0];
+
+      if (result.length === 0) {
+        throw new Error(
+          "Erro ao atualizar presença: nenhum registro encontrado."
+        );
+      }
+
+      return result[0]; // Retorna o registro atualizado
     } catch (err) {
       console.error("Erro ao atualizar presença:", err);
       throw new Error("Erro ao atualizar presença");
     }
   },
+
   async mudarStatusPresenca(id_presenca, presenca_ida, presenca_volta) {
     const sql = `
       UPDATE PRESENCA 
