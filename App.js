@@ -452,12 +452,13 @@ router.post("/presenca/adicionar", async (req, res) => {
 });
 
 router.put("/presenca/mudarstatus", async (req, res) => {
-  const { id_presenca, presenca_ida, presenca_volta } = req.body;
+  const { id_presenca, status_presenca, tipo } = req.body;
+
   try {
     const presencaAtualizada = await Presenca.mudarStatusPresenca(
       id_presenca,
-      presenca_ida,
-      presenca_volta
+      status_presenca,
+      tipo
     );
 
     if (!presencaAtualizada) {

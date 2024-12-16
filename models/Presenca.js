@@ -270,7 +270,15 @@ const Presenca = {
   //   }
   // },
 
-  async mudarStatusPresenca(id_presenca, presenca_ida, presenca_volta) {
+  async mudarStatusPresenca(id_presenca, status_presenca, tipo) {
+    let presenca_ida = false;
+    let presenca_volta = false;
+    if (tipo === "ida" && status_presenca === true) {
+      presenca_ida = true;
+    }
+    if (tipo === "volta" && status_presenca === true) {
+      presenca_volta = true;
+    }
     const sql = `
       UPDATE PRESENCA 
       SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2 
