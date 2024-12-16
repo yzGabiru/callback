@@ -1,6 +1,6 @@
 import { conexaoBanco } from "../db.js";
 import { v4 as uuidv4 } from "uuid";
-const { DateTime } = require("luxon");
+import { DateTime } from "luxon";
 
 const Presenca = {
   async registrarPresenca(dadosPresenca) {
@@ -168,11 +168,10 @@ const Presenca = {
       RETURNING *;
     `;
 
-    //fazer uma verificação de horario
-    const fusoHorario = "America/Sao_Paulo"; // Altere conforme necessário
-    // Obter a hora atual no fuso horário especificado
+    const fusoHorario = "America/Sao_Paulo";
+
     const horaAtual = DateTime.now().setZone(fusoHorario);
-    const hora = horaAtual.hour; // Obtém apenas a hora
+    const hora = horaAtual.hour;
     console.log("Que horas são agora: ", hora);
 
     let presenca_ida = false;
