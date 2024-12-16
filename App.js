@@ -382,9 +382,6 @@ app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
         console.error("Erro:", err);
         return res.status(400).json({ erro: err.msg });
       }
-      return res
-        .status(200)
-        .json({ msg: "Presença encontrada.", presencaRetornada });
     }
     if (!presencaRetornada) {
       try {
