@@ -158,6 +158,8 @@ const Presenca = {
   },
   //consertar a logica do horario
   async atualizarPresenca(id_presenca, id_onibus, vai, volta) {
+    console.log("vai: ", vai);
+    console.log("volta ", volta);
     const sql = `
       UPDATE PRESENCA
       SET PRESENCA_IDA = $1, PRESENCA_VOLTA = $2, VAI = $3, VOLTA = $4
@@ -168,6 +170,7 @@ const Presenca = {
     //fazer uma verificação de horario
     const horaAtual = new Date();
     const hora = horaAtual.getHours(); //pega a hora tual
+    console.log("Que horas sao agora: ", hora);
 
     let presenca_ida = false;
     let presenca_volta = false;
