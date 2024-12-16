@@ -346,6 +346,7 @@ router.get(
 );
 
 app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
+  console.log("dados recebidos na api: ", req.body);
   const { id_onibus, id_usuario } = req.params;
 
   const hoje = new Date();
@@ -355,6 +356,7 @@ app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
   const dia = String(hoje.getDate()).padStart(2, "0");
 
   const data = `${ano}-${mes}-${dia}`;
+  console.log("data hoje: ", data);
 
   if (!id_onibus || !id_usuario) {
     return res.status(400).json({ msg: "onibusId e userId são obrigatórios!" });
@@ -365,6 +367,7 @@ app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
       id_onibus,
       id_usuario
     );
+    console.log("presenca retornada do validar presenca: ", presencaRetornada);
 
     if (presencaRetornada) {
       const id_presenca = presencaRetornada.id_presenca;
@@ -377,6 +380,10 @@ app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
           vai,
           volta
         );
+        console.log(
+          "Presenca que saiu do atualizar presenca: ",
+          presencaEditada
+        );
         return res.status(200).json({ presencaEditada });
       } catch (err) {
         console.error("Erro:", err);
@@ -384,6 +391,7 @@ app.put("/presenca/verificar/:id_onibus/:id_usuario", async (req, res) => {
       }
     }
     if (!presencaRetornada) {
+      console.log("ele pediu pra criar outra presenca");
       try {
         const presencaRegistrada = await Presenca.registrarPresenca({
           id_usuario,
